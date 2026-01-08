@@ -1,0 +1,83 @@
+#include "Header.hpp"
+#include <filesystem>
+namespace fs = std::filesystem;
+
+namespace ProcessingFuncs {
+    void StringifyContent(std::vector<ListItem*>& currentContent, std::vector<std::string>& currentStringified) {
+        for(int i = 0; i < currentContent.size(); i++){
+            currentStringified.push_back(currentContent[i]->ToString());
+            }
+    }
+
+    void OnSelectedMenuOption(
+        std::vector<ListItem*>& currentContent, 
+        std::vector<std::string>& currentStringified,
+        std::string& currentPath,
+        int& selected,
+        std::string& exception) {
+        try{
+            exception = "";
+            std::string pathDestination;
+            if(currentContent[selected]->GetType() == ItemTypes::BACK){
+              pathDestination = currentPath.substr(0, currentPath.find_last_of("/"));
+              if(pathDestination == ""){
+                pathDestination = "/";
+              }
+              PathToItemList(pathDestination, currentContent);
+              currentPath = pathDestination;
+              currentStringified.clear();
+              for(int i = 0; i < currentContent.size(); i++){
+                currentStringified.push_back(currentContent[i]->ToString());
+              }
+            } else if(currentContent[selected]->GetType() == ItemTypes::DIR){
+              pathDestination = currentContent[selected]->GetName();
+              PathToItemList(pathDestination, currentContent);
+              currentPath = pathDestination;
+              currentStringified.clear();
+              for(int i = 0; i < currentContent.size(); i++){
+                currentStringified.push_back(currentContent[i]->ToString());
+              }
+              selected = 0;
+            } else if(currentContent[selected]->GetType() == ItemTypes::FIL){
+              std::system(("xdg-open '" + currentContent[selected]->GetName() + "'").c_str() );
+            }
+          }
+          catch(fs::filesystem_error &e){
+            exception = e.what();
+          }
+    }
+
+    ftxui::Elements GetLayout(ftxui::Component& menu){
+        return ftxui::hbox({
+
+            ftxui::window(ftxui::text("Quick Navigation"),
+              ftxui::vbox({
+                ftxui::text("nav")
+              })
+      
+            ),
+            
+            ftxui::vbox(
+      
+              ftxui::window(ftxui::text("Location"),
+                ftxui::text(currentPath) | ftxui::bold
+              ),
+      
+              ftxui::window(ftxui::text("Content"),
+                menu->Render() | ftxui::yframe
+              ) | ftxui::flex,
+      
+              ftxui::window(ftxui::text("Exception"),
+                ftxui::text(exception) | ftxui::bold
+              )
+      
+            ) | ftxui::flex,
+      
+            ftxui::window(ftxui::text("Item Preview"),
+              ftxui::text("item preview placeholder")
+            ) | ftxui::flex,
+      
+          });
+    }
+}
+

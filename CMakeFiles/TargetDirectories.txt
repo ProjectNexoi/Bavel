@@ -1,0 +1,3 @@
+/home/urifish/Personal/Coding/C++/TUIExplorer/CMakeFiles/TUIExplorer.dir
+/home/urifish/Personal/Coding/C++/TUIExplorer/CMakeFiles/edit_cache.dir
+/home/urifish/Personal/Coding/C++/TUIExplorer/CMakeFiles/rebuild_cache.dir
