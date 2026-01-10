@@ -24,21 +24,25 @@ namespace ProcessingFuncs {
                 pathDestination = "/";
               }
               PathToItemList(pathDestination, currentContent);
+              SortItemList(currentContent);
               currentPath = pathDestination;
               currentStringified.clear();
               for(int i = 0; i < currentContent.size(); i++){
                 currentStringified.push_back(currentContent[i]->ToString());
               }
-            } else if(currentContent[selected]->GetType() == ItemTypes::DIR){
+            } 
+            else if(currentContent[selected]->GetType() == ItemTypes::DIR){
               pathDestination = currentContent[selected]->GetName();
               PathToItemList(pathDestination, currentContent);
+              SortItemList(currentContent);
               currentPath = pathDestination;
               currentStringified.clear();
               for(int i = 0; i < currentContent.size(); i++){
                 currentStringified.push_back(currentContent[i]->ToString());
               }
               selected = 0;
-            } else if(currentContent[selected]->GetType() == ItemTypes::FIL){
+            } 
+            else if(currentContent[selected]->GetType() == ItemTypes::FIL){
               std::system(("xdg-open '" + currentContent[selected]->GetName() + "'").c_str() );
             }
           }

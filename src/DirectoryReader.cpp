@@ -52,6 +52,32 @@ void PathToItemList(std::string path, std::vector<ListItem*>& currentContent){
   }
 }
 
-void SortItemList(std::vector<ListItem*>& currentContent, SortTypes sortType = SortTypes::NAME_ASC){
-    
+void SortItemList(std::vector<ListItem*>& currentContent, SortTypes sortType){
+    int n = currentContent.size();
+    auto getSortCriterion = [sortType](ListItem* item) {
+        switch(sortType) {
+            case SortTypes::NAME_ASC:
+            case SortTypes::NAME_DESC:
+                return item->GetName();
+            case SortTypes::TIME_ASC:
+            case SortTypes::TIME_DESC:
+                return item->GetLastOpened();
+            default:
+                return item->GetName();
+        }
+    };
+
+    bool swapped;
+    for (int i = 0; i < n - 1; i++) {
+        swapped = false;
+        for (int j = 0; j < n - i - 1; j++) {
+            if (getSortCriterion(currentContent[j]) > getSortCriterion(currentContent[j + 1])) {
+                std::swap(currentContent[j], currentContent[j + 1]);
+                swapped = true;
+            }
+        }
+      
+        if (!swapped)
+            break;
+    }
 }

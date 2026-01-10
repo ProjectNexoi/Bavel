@@ -18,8 +18,6 @@ enum SortTypes{
     NAME_DESC = 1,
     TIME_ASC = 2,
     TIME_DESC = 3,
-    TYPE_ASC = 4,
-    TYPE_DESC = 5
 };
 
 class ListItem{
@@ -42,7 +40,7 @@ class ListItem{
 };
 
 void PathToItemList(std::string path, std::vector<ListItem*>& currentContent);
-void SortItemList(std::vector<ListItem*>& currentContent, SortTypes sortType);
+void SortItemList(std::vector<ListItem*>& currentContent, SortTypes sortType = SortTypes::NAME_ASC);
 
 namespace ProcessingFuncs{
     void StringifyContent(std::vector<ListItem*>& currentContent, 
