@@ -98,42 +98,65 @@ int main(){
     quickNavBox
   });
 
+  int selectedMiddleChild = 2;
   auto middlePane = ftxui::Container::Vertical({
     locationBox,
     sortBox,
     menuBox,
     exceptionBox
-  }) | ftxui::flex;
+  }, &selectedMiddleChild) | ftxui::flex;
 
   auto rightPane = ftxui::Container::Vertical({
     previewBox
   }) | ftxui::flex;
 
-  int selectedChild = 0;
+  int selectedFinalChild = 1;
   auto compositionFinal = ftxui::Container::Horizontal({
     leftPane, 
     middlePane, 
     rightPane}, 
-    &selectedChild);
+    &selectedFinalChild);
 
   auto layout = ftxui::CatchEvent(compositionFinal, [&](ftxui::Event event) {
         if (event == ftxui::Event::Tab) {
-            if(selectedChild == 0){
-                selectedChild = 1;
+            if(selectedFinalChild == 0){
+                selectedFinalChild = 1;
                 return true;
             }
-             if(selectedChild == 1){
-                selectedChild = 0;
+             if(selectedFinalChild == 1){
+                if(selectedMiddleChild == 1){
+                    selectedMiddleChild = 2;
+                    return true;
+                }
+                if(selectedMiddleChild == 2){
+                    selectedMiddleChild = 1;
+                    return true;
+                }
+                return false;
+            }
+            if(selectedFinalChild == 2){
+                selectedFinalChild = 0;
                 return true;
             }
         }
         if (event == ftxui::Event::TabReverse) {
-            if(selectedChild == 0){
-                selectedChild = 1;
+            if(selectedFinalChild == 0){
+                selectedFinalChild = 1;
                 return true;
             }
-             if(selectedChild == 1){
-                selectedChild = 0;
+             if(selectedFinalChild == 1){
+                if(selectedMiddleChild == 1){
+                    selectedMiddleChild = 2;
+                    return true;
+                }
+                if(selectedMiddleChild == 2){
+                    selectedMiddleChild = 1;
+                    return true;
+                }
+                return false;
+            }
+            if(selectedFinalChild == 2){
+                selectedFinalChild = 0;
                 return true;
             }
         }

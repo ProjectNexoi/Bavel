@@ -88,40 +88,4 @@ namespace ProcessingFuncs {
 
       return cftime;
     }
-
-    /*
-    ftxui::Elements GetLayout(ftxui::Component& menu){
-        return ftxui::hbox({
-
-            ftxui::window(ftxui::text("Quick Navigation"),
-              ftxui::vbox({
-                ftxui::text("nav")
-              })
-      
-            ),
-            
-            ftxui::vbox(
-      
-              ftxui::window(ftxui::text("Location"),
-                ftxui::text(currentPath) | ftxui::bold
-              ),
-      
-              ftxui::window(ftxui::text("Content"),
-                menu->Render() | ftxui::yframe
-              ) | ftxui::flex,
-      
-              ftxui::window(ftxui::text("Exception"),
-                ftxui::text(exception) | ftxui::bold
-              )
-      
-            ) | ftxui::flex,
-      
-            ftxui::window(ftxui::text("Item Preview"),
-              ftxui::text("item preview placeholder")
-            ) | ftxui::flex,
-      
-          });
-    }
-    */
 }
-
