@@ -1,1 +1,0 @@
-/usr/bin/c++ CMakeFiles/TUIExplorer.dir/src/main.cpp.o -o TUIExplorer  ftxui/lib/libftxui-screen.a ftxui/lib/libftxui-dom.a ftxui/lib/libftxui-component.a ftxui/lib/libftxui-dom.a ftxui/lib/libftxui-screen.a 

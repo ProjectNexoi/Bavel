@@ -65,25 +65,11 @@ namespace ProcessingFuncs{
         std::string& currentPath,
         std::string& exception,
         SortTypes& sortType);
-    void OnSelectedQNavAddButton(
-        std::string& currentPath, 
+    void OnSelectedQNavAddButton(std::string& currentPath, 
         nlohmann::json& data, 
         std::string& homedir, 
-        std::vector<std::string>& qNavPaths,
         std::string& exception);
     std::string FsTimeToString(std::filesystem::file_time_type time);
     std::time_t FsTimeToTimeT(std::filesystem::file_time_type time);
 }
-
-namespace QNavManager{
-    void ReloadQNavButtons(
-        ftxui::Components& qNavButtons, 
-        std::vector<std::string>& qNavPaths, 
-        std::vector<ListItem*>& currentContent, 
-        std::vector<std::string>& currentStringified, 
-        std::string& currentPath, 
-        std::string& exception, 
-        SortTypes& sortType);
-}
-
 #endif 

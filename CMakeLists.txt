@@ -29,7 +29,6 @@ add_executable(bavel
   src/ListItem.cpp
   src/DirectoryReader.cpp
   src/ProcessingFuncs.cpp
-  src/QNavManager.cpp
 )
 
 target_link_libraries(bavel

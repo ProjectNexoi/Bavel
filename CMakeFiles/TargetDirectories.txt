@@ -1,3 +1,0 @@
-/home/uri/Programs/Bavel/CMakeFiles/bavel.dir
-/home/uri/Programs/Bavel/CMakeFiles/edit_cache.dir
-/home/uri/Programs/Bavel/CMakeFiles/rebuild_cache.dir

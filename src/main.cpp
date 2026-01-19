@@ -64,20 +64,26 @@ int main(){
   std::string exception = "";
 
   //QuickNav entries
-  ftxui::Components qNavButtons;
-  std::vector<std::string> qNavPaths;
+  std::vector<std::string> qNavPaths = {};
   try{
     qNavPaths = data["qNavEntries"].get<std::vector<std::string>>();
-    for(int i = 0; i < qNavPaths.size(); i++){
-      qNavButtons.push_back(ftxui::Button(&qNavPaths[i], [&, i]{ProcessingFuncs::OnSelectedQNavButton(currentContent, currentStringified, qNavPaths[i], currentPath, exception, sortType);}));
-    }
-  } catch(std::exception& e){
+    
+  }
+  catch(std::exception& e){
     exception = e.what();
   }
-  auto qNavContainer = ftxui::Container::Vertical(qNavButtons);
+  int qNavSelected = 0;
+  auto qNavMenuOption = ftxui::MenuOption(ftxui::MenuOption::Vertical());
+  qNavMenuOption.on_enter = [&]{ProcessingFuncs::OnSelectedQNavButton(currentContent, currentStringified, qNavPaths[qNavSelected], currentPath, exception, sortType);};
+  ftxui::Component qNavMenu = ftxui::Menu(&qNavPaths, &qNavSelected, qNavMenuOption);
+
 
   //QuickNav add new entry button
-  ftxui::Component qNavAddButton = ftxui::Button("Add", [&]{ProcessingFuncs::OnSelectedQNavAddButton(currentPath, data, homedir, qNavPaths, exception); QNavManager::ReloadQNavButtons(qNavButtons, qNavPaths, currentContent, currentStringified, currentPath, exception, sortType);});
+  ftxui::Component qNavAddButton = ftxui::Button("Add Current Path", [&]{
+      qNavPaths.push_back(currentPath);
+      data["qNavEntries"] = qNavPaths;
+      std::ofstream(std::string(homedir) + "/.bavel/data.json") << data;
+    });
 
 
   int selected = currentContent.size() > 1 ? 1 : 0;
@@ -92,6 +98,7 @@ int main(){
   sort_menu_option.on_change = [&]{sortType = SortTypes(sortSelected); ProcessingFuncs::OnSelectedSortOption(currentContent,currentStringified,sortType); selected = currentContent.size() > 1 ? 1 : 0;};
   ftxui::Component sort = ftxui::Menu(&sortOptions, &sortSelected, sort_menu_option);
 
+
   auto sortBox = ftxui::Renderer(sort , [&] {
     return ftxui::window(ftxui::text("Sort"),
           sort->Render() | ftxui::yframe
@@ -104,12 +111,15 @@ int main(){
         ) | ftxui::flex;
   });
 
-
-  auto quickNavBox = ftxui::Renderer(qNavContainer, [&] {
+  auto quickNavBox = ftxui::Renderer(qNavMenu, [&] {
     return ftxui::vbox(
-        qNavContainer->Render()
+        qNavMenu->Render()
       ) | ftxui::flex;
     });
+
+  auto quickNavSeparator = ftxui::Renderer([&] {
+    return ftxui::separator();
+  });
 
   auto quickNavAddBox = ftxui::Renderer(qNavAddButton, [&] {
     return ftxui::vbox(
@@ -138,6 +148,7 @@ int main(){
   int selectedLeftChild = 0;
   auto leftPaneContainer = ftxui::Container::Vertical({
     quickNavBox,
+    quickNavSeparator,
     quickNavAddBox
   }, &selectedLeftChild);
 
@@ -208,6 +219,12 @@ int main(){
                 selectedFinalChild = 0;
                 return true;
             }
+        }
+        if(event == ftxui::Event::Delete && selectedFinalChild == 0 && selectedLeftChild == 0){
+            qNavPaths.erase(qNavPaths.begin() + qNavSelected);
+            data["qNavEntries"] = qNavPaths;
+            std::ofstream(std::string(homedir) + "/.bavel/data.json") << data;
+            return true;
         }
         return false;
     });

@@ -75,15 +75,23 @@ namespace ProcessingFuncs {
       }
     }
 
-    void OnSelectedQNavAddButton(std::string& currentPath, nlohmann::json& data, std::string& homedir, std::vector<std::string>& qNavPaths, std::string& exception){
+    void OnSelectedQNavAddButton(std::string& currentPath, nlohmann::json& data, std::string& homedir, std::string& exception){
       try{
         exception = "";
+        if(!data["qNavEntries"].is_array()){
+           data["qNavEntries"] = nlohmann::json::array();
+        }
         data["qNavEntries"].push_back(currentPath);
         std::ofstream(std::string(homedir) + "/.bavel/data.json") << data;
-        qNavPaths = data["qNavEntries"].get<std::vector<std::string>>();
       }
-      catch(fs::filesystem_error &e){
+      catch(const fs::filesystem_error &e){
         exception = e.what();
+      }
+      catch(const std::exception &e){
+        exception = std::string("Error: ") + e.what();
+      }
+      catch(...){
+        exception = "Unknown error occurred";
       }
     }
 
