@@ -93,7 +93,16 @@ int main(){
 
   int sortSelected = 0;
   auto sort_menu_option = ftxui::MenuOption::Toggle();
-  sort_menu_option.underline.enabled = true;
+  sort_menu_option.entries_option.transform = [](const ftxui::EntryState& state) {
+    auto element = ftxui::text(state.label);
+    if (state.focused) {
+      element |= ftxui::inverted;
+    }
+    if (state.active) {
+      element |= ftxui::bold;
+    }
+    return element | ftxui::center | ftxui::flex;
+  };
   std::vector<std::string> sortOptions = {"Name Ascending", "Name Descending", "Last Modified Ascending", "Last Modified Descending"};
   sort_menu_option.on_change = [&]{sortType = SortTypes(sortSelected); ProcessingFuncs::OnSelectedSortOption(currentContent,currentStringified,sortType); selected = currentContent.size() > 1 ? 1 : 0;};
   ftxui::Component sort = ftxui::Menu(&sortOptions, &sortSelected, sort_menu_option);
@@ -101,7 +110,7 @@ int main(){
 
   auto sortBox = ftxui::Renderer(sort , [&] {
     return ftxui::window(ftxui::text("Sort"),
-          sort->Render() | ftxui::yframe
+          sort->Render() | ftxui::xframe
         );
   });
 
