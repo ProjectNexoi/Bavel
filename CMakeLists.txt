@@ -13,16 +13,28 @@ project(bavel
 
 find_package(ftxui 5 REQUIRED)
 
+# Check for local nlohmann_json include
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/include/single_include/nlohmann/json.hpp")
+    add_library(nlohmann_json INTERFACE)
+    target_include_directories(nlohmann_json INTERFACE 
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/single_include
+    )
+else()
+    message(FATAL_ERROR "nlohmann/json.hpp not found in ${CMAKE_CURRENT_SOURCE_DIR}/include/single_include")
+endif()
+
 
 add_executable(bavel
   src/main.cpp
   src/ListItem.cpp
   src/DirectoryReader.cpp
   src/ProcessingFuncs.cpp
+  src/QNavManager.cpp
 )
 
 target_link_libraries(bavel
   PRIVATE ftxui::screen
   PRIVATE ftxui::dom
   PRIVATE ftxui::component
+  PRIVATE nlohmann_json
 )

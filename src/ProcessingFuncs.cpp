@@ -1,5 +1,8 @@
 #include "Header.hpp"
 #include <filesystem>
+#include <nlohmann/json.hpp>
+#include <fstream>
+
 namespace fs = std::filesystem;
 
 namespace ProcessingFuncs {
@@ -66,6 +69,18 @@ namespace ProcessingFuncs {
         SortItemList(currentContent, sortType);
         currentPath = pathDestination;
         StringifyContent(currentContent, currentStringified);
+      }
+      catch(fs::filesystem_error &e){
+        exception = e.what();
+      }
+    }
+
+    void OnSelectedQNavAddButton(std::string& currentPath, nlohmann::json& data, std::string& homedir, std::vector<std::string>& qNavPaths, std::string& exception){
+      try{
+        exception = "";
+        data["qNavEntries"].push_back(currentPath);
+        std::ofstream(std::string(homedir) + "/.bavel/data.json") << data;
+        qNavPaths = data["qNavEntries"].get<std::vector<std::string>>();
       }
       catch(fs::filesystem_error &e){
         exception = e.what();

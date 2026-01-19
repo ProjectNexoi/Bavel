@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <functional>
 #include <string>
 #include <vector>
@@ -7,9 +8,13 @@
 #include <cstdlib>
 #include <filesystem>
 #include <chrono>
-//namespace fs = std::filesystem;
+#include <unistd.h>
+#include <sys/types.h>
+#include <pwd.h>
+namespace fs = std::filesystem;
 
 #include "Header.hpp"
+#include <nlohmann/json.hpp>
 
 #include "ftxui/screen/terminal.hpp"
 
@@ -32,10 +37,22 @@ int main(){
   ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
   auto screen = ftxui::ScreenInteractive::FixedSize(size.ws_col,size.ws_row);
 
+  //Get user's home directory
+  struct passwd *pw = getpwuid(getuid());
+  std::string homedir = pw->pw_dir;
+
+  //fetch json data
+  nlohmann::json data;
+  if(!fs::exists(std::string(homedir) + "/.bavel/data.json")){ //if no data, then make the file
+    fs::create_directories(std::string(homedir) + "/.bavel");
+    std::ofstream(std::string(homedir) + "/.bavel/data.json");
+  }
+  if(!fs::is_empty(std::string(homedir) + "/.bavel/data.json")){
+    std::ifstream(std::string(homedir) + "/.bavel/data.json") >> data;
+  }
+
   SortTypes sortType = SortTypes::NAME_ASC;
-
   
-
   //Fetches the current directory's content
   std::string currentPath = "/";
   std::vector<ListItem*> currentContent;
@@ -47,12 +64,21 @@ int main(){
   std::string exception = "";
 
   //QuickNav entries
-  std::vector<std::string> qNavPaths = {"/home/uri", "/home/uri/Documents", "/home/uri/Desktop"};
   ftxui::Components qNavButtons;
-  for(int i = 0; i < qNavPaths.size(); i++){
-    qNavButtons.push_back(ftxui::Button(&qNavPaths[i], [&, i]{ProcessingFuncs::OnSelectedQNavButton(currentContent, currentStringified, qNavPaths[i], currentPath, exception, sortType);}));
+  std::vector<std::string> qNavPaths;
+  try{
+    qNavPaths = data["qNavEntries"].get<std::vector<std::string>>();
+    for(int i = 0; i < qNavPaths.size(); i++){
+      qNavButtons.push_back(ftxui::Button(&qNavPaths[i], [&, i]{ProcessingFuncs::OnSelectedQNavButton(currentContent, currentStringified, qNavPaths[i], currentPath, exception, sortType);}));
+    }
+  } catch(std::exception& e){
+    exception = e.what();
   }
   auto qNavContainer = ftxui::Container::Vertical(qNavButtons);
+
+  //QuickNav add new entry button
+  ftxui::Component qNavAddButton = ftxui::Button("Add", [&]{ProcessingFuncs::OnSelectedQNavAddButton(currentPath, data, homedir, qNavPaths, exception); QNavManager::ReloadQNavButtons(qNavButtons, qNavPaths, currentContent, currentStringified, currentPath, exception, sortType);});
+
 
   int selected = currentContent.size() > 1 ? 1 : 0;
   auto menu_option = ftxui::MenuOption();
@@ -80,9 +106,15 @@ int main(){
 
 
   auto quickNavBox = ftxui::Renderer(qNavContainer, [&] {
-    return ftxui::window(ftxui::text("Quick Navigation"),
+    return ftxui::vbox(
         qNavContainer->Render()
       ) | ftxui::flex;
+    });
+
+  auto quickNavAddBox = ftxui::Renderer(qNavAddButton, [&] {
+    return ftxui::vbox(
+        qNavAddButton->Render()
+      );
     });
 
   auto locationBox = ftxui::Renderer([&] {
@@ -104,9 +136,16 @@ int main(){
   });
 
   int selectedLeftChild = 0;
-  auto leftPane = ftxui::Container::Vertical({
-    quickNavBox
+  auto leftPaneContainer = ftxui::Container::Vertical({
+    quickNavBox,
+    quickNavAddBox
   }, &selectedLeftChild);
+
+  auto leftPane = ftxui::Renderer(leftPaneContainer, [&] {
+    return ftxui::window(ftxui::text("Quick Navigation"),
+      leftPaneContainer->Render()
+    );
+  });
 
   int selectedMiddleChild = 2;
   auto middlePane = ftxui::Container::Vertical({

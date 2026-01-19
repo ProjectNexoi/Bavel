@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/bavel.dir/src/main.cpp.o CMakeFiles/bavel.dir/src/ListItem.cpp.o CMakeFiles/bavel.dir/src/DirectoryReader.cpp.o CMakeFiles/bavel.dir/src/ProcessingFuncs.cpp.o -o bavel  ftxui/lib/libftxui-screen.a ftxui/lib/libftxui-dom.a ftxui/lib/libftxui-component.a ftxui/lib/libftxui-dom.a ftxui/lib/libftxui-screen.a 

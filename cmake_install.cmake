@@ -1,4 +1,4 @@
-# Install script for directory: /home/urifish/Personal/Coding/C++/TUIExplorer
+# Install script for directory: /home/uri/Programs/Bavel
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -50,5 +50,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/urifish/Personal/Coding/C++/TUIExplorer/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/uri/Programs/Bavel/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
