@@ -34,6 +34,8 @@ int main(){
 
   SortTypes sortType = SortTypes::NAME_ASC;
 
+  
+
   //Fetches the current directory's content
   std::string currentPath = "/";
   std::vector<ListItem*> currentContent;
@@ -42,10 +44,18 @@ int main(){
 
   std::vector<std::string> currentStringified;
   ProcessingFuncs::StringifyContent(currentContent, currentStringified);
+  std::string exception = "";
+
+  //QuickNav entries
+  std::vector<std::string> qNavPaths = {"/home/uri", "/home/uri/Documents", "/home/uri/Desktop"};
+  ftxui::Components qNavButtons;
+  for(int i = 0; i < qNavPaths.size(); i++){
+    qNavButtons.push_back(ftxui::Button(&qNavPaths[i], [&, i]{ProcessingFuncs::OnSelectedQNavButton(currentContent, currentStringified, qNavPaths[i], currentPath, exception, sortType);}));
+  }
+  auto qNavContainer = ftxui::Container::Vertical(qNavButtons);
 
   int selected = currentContent.size() > 1 ? 1 : 0;
   auto menu_option = ftxui::MenuOption();
-  std::string exception = "";
   menu_option.on_enter = [&]{ProcessingFuncs::OnSelectedMenuOption(currentContent, currentStringified, currentPath, selected, exception, sortType); selected = currentContent.size() > 1 ? 1 : 0;};
   ftxui::Component menu = ftxui::Menu(&currentStringified, &selected, menu_option);
 
@@ -68,12 +78,10 @@ int main(){
         ) | ftxui::flex;
   });
 
-  auto quickNavBox = ftxui::Renderer([&] {
-    return ftxui::window(ftxui::text("Quick Navigation"),
-        ftxui::vbox({
-          ftxui::text("nav")
-        })
 
+  auto quickNavBox = ftxui::Renderer(qNavContainer, [&] {
+    return ftxui::window(ftxui::text("Quick Navigation"),
+        qNavContainer->Render()
       ) | ftxui::flex;
     });
 
@@ -95,9 +103,10 @@ int main(){
     );
   });
 
+  int selectedLeftChild = 0;
   auto leftPane = ftxui::Container::Vertical({
     quickNavBox
-  });
+  }, &selectedLeftChild);
 
   int selectedMiddleChild = 2;
   auto middlePane = ftxui::Container::Vertical({
@@ -130,7 +139,7 @@ int main(){
                     return true;
                 }
                 if(selectedMiddleChild == 2){
-                    selectedMiddleChild = 1;
+                    selectedFinalChild = 2;
                     return true;
                 }
                 return false;
@@ -146,12 +155,12 @@ int main(){
                 return true;
             }
              if(selectedFinalChild == 1){
-                if(selectedMiddleChild == 1){
-                    selectedMiddleChild = 2;
+                if(selectedMiddleChild == 0){
+                    selectedMiddleChild = 1;
                     return true;
                 }
-                if(selectedMiddleChild == 2){
-                    selectedMiddleChild = 1;
+                if(selectedMiddleChild == 1){
+                    selectedFinalChild = 0;
                     return true;
                 }
                 return false;

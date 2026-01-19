@@ -53,6 +53,24 @@ namespace ProcessingFuncs {
       StringifyContent(currentContent, currentStringified);
     }
 
+    void OnSelectedQNavButton(
+        std::vector<ListItem*>& currentContent, 
+        std::vector<std::string>& currentStringified,
+        std::string pathDestination,
+        std::string& currentPath,
+        std::string& exception,
+        SortTypes& sortType){
+      try{
+        exception = "";
+        PathToItemList(pathDestination, currentContent);
+        SortItemList(currentContent, sortType);
+        currentPath = pathDestination;
+        StringifyContent(currentContent, currentStringified);
+      }
+      catch(fs::filesystem_error &e){
+        exception = e.what();
+      }
+    }
 
     //Horrible, horrible, horrible.
     std::string FsTimeToString(fs::file_time_type time){

@@ -5,3 +5,4 @@ TODO:
 - Creating/Removing files/folders
 - Copy & Paste
 - File Editing using Vim/NVim
+- Search Functionality

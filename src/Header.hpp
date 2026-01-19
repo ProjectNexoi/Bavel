@@ -56,6 +56,13 @@ namespace ProcessingFuncs{
         std::vector<ListItem*>& currentContent,
         std::vector<std::string>& currentStringified,
         SortTypes& sortType);
+    void OnSelectedQNavButton(
+        std::vector<ListItem*>& currentContent, 
+        std::vector<std::string>& currentStringified,
+        std::string pathDestination,
+        std::string& currentPath,
+        std::string& exception,
+        SortTypes& sortType);
     std::string FsTimeToString(std::filesystem::file_time_type time);
     std::time_t FsTimeToTimeT(std::filesystem::file_time_type time);
 }
