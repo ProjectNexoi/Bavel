@@ -32,6 +32,8 @@ namespace fs = std::filesystem;
 
 int main(){
 
+  Context context;
+
   //Sets window to fill terminal
   struct winsize size;
   ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
@@ -39,34 +41,31 @@ int main(){
 
   //Get user's home directory
   struct passwd *pw = getpwuid(getuid());
-  std::string homedir = pw->pw_dir;
+  context.homedir = pw->pw_dir;
 
   //fetch json data
-  nlohmann::json data;
-  if(!fs::exists(std::string(homedir) + "/.bavel/data.json")){ //if no data, then make the file
-    fs::create_directories(std::string(homedir) + "/.bavel");
-    std::ofstream(std::string(homedir) + "/.bavel/data.json");
+  if(!fs::exists(std::string(context.homedir) + "/.bavel/data.json")){ //if no data, then make the file
+    fs::create_directories(std::string(context.homedir) + "/.bavel");
+    std::ofstream(std::string(context.homedir) + "/.bavel/data.json");
   }
-  if(!fs::is_empty(std::string(homedir) + "/.bavel/data.json")){
-    std::ifstream(std::string(homedir) + "/.bavel/data.json") >> data;
+  if(!fs::is_empty(std::string(context.homedir) + "/.bavel/data.json")){
+    std::ifstream(std::string(context.homedir) + "/.bavel/data.json") >> context.data;
   }
 
-  SortTypes sortType = SortTypes::NAME_ASC;
+  context.sortType = SortTypes::NAME_ASC;
   
   //Fetches the current directory's content
-  std::string currentPath = "/";
-  std::vector<ListItem*> currentContent;
-  PathToItemList(currentPath, currentContent);
-  SortItemList(currentContent, sortType);
+  context.currentPath = "/";
+  PathToItemList(context.currentPath, context);
+  SortItemList(context);
 
-  std::vector<std::string> currentStringified;
-  ProcessingFuncs::StringifyContent(currentContent, currentStringified);
+  ProcessingFuncs::StringifyContent(context);
   std::string exception = "";
 
   //QuickNav entries
   std::vector<std::string> qNavPaths = {};
   try{
-    qNavPaths = data["qNavEntries"].get<std::vector<std::string>>();
+    qNavPaths = context.data["qNavEntries"].get<std::vector<std::string>>();
     
   }
   catch(std::exception& e){
@@ -74,22 +73,32 @@ int main(){
   }
   int qNavSelected = 0;
   auto qNavMenuOption = ftxui::MenuOption(ftxui::MenuOption::Vertical());
-  qNavMenuOption.on_enter = [&]{ProcessingFuncs::OnSelectedQNavButton(currentContent, currentStringified, qNavPaths[qNavSelected], currentPath, exception, sortType);};
+  qNavMenuOption.elements_prefix = []{ return ftxui::text(""); };
+  qNavMenuOption.entries_option.transform = [](const ftxui::EntryState& state) {
+    auto element = ftxui::text(" " + state.label + " ");
+    if (state.focused) {
+      element |= ftxui::inverted;
+    }
+    if (state.active) {
+      element |= ftxui::bold;
+    }
+    return element | ftxui::flex;
+  };
+  qNavMenuOption.on_enter = [&]{ProcessingFuncs::OnSelectedQNavButton(context, qNavPaths[qNavSelected]);};
   ftxui::Component qNavMenu = ftxui::Menu(&qNavPaths, &qNavSelected, qNavMenuOption);
 
 
   //QuickNav add new entry button
   ftxui::Component qNavAddButton = ftxui::Button("Add Current Path", [&]{
-      qNavPaths.push_back(currentPath);
-      data["qNavEntries"] = qNavPaths;
-      std::ofstream(std::string(homedir) + "/.bavel/data.json") << data;
+      qNavPaths.push_back(context.currentPath);
+      std::ofstream(std::string(context.homedir) + "/.bavel/data.json") << context.data;
     });
 
 
-  int selected = currentContent.size() > 1 ? 1 : 0;
+  int selected = context.currentContent.size() > 1 ? 1 : 0;
   auto menu_option = ftxui::MenuOption();
-  menu_option.on_enter = [&]{ProcessingFuncs::OnSelectedMenuOption(currentContent, currentStringified, currentPath, selected, exception, sortType); selected = currentContent.size() > 1 ? 1 : 0;};
-  ftxui::Component menu = ftxui::Menu(&currentStringified, &selected, menu_option);
+  menu_option.on_enter = [&]{ProcessingFuncs::OnSelectedMenuOption(context, selected); selected = context.currentContent.size() > 1 ? 1 : 0;};
+  ftxui::Component menu = ftxui::Menu(&context.currentStringified, &selected, menu_option);
 
   int sortSelected = 0;
   auto sort_menu_option = ftxui::MenuOption::Toggle();
@@ -104,7 +113,7 @@ int main(){
     return element | ftxui::center | ftxui::flex;
   };
   std::vector<std::string> sortOptions = {"Name Ascending", "Name Descending", "Last Modified Ascending", "Last Modified Descending"};
-  sort_menu_option.on_change = [&]{sortType = SortTypes(sortSelected); ProcessingFuncs::OnSelectedSortOption(currentContent,currentStringified,sortType); selected = currentContent.size() > 1 ? 1 : 0;};
+  sort_menu_option.on_change = [&]{context.sortType = SortTypes(sortSelected); ProcessingFuncs::OnSelectedSortOption(context);};
   ftxui::Component sort = ftxui::Menu(&sortOptions, &sortSelected, sort_menu_option);
 
 
@@ -138,7 +147,7 @@ int main(){
 
   auto locationBox = ftxui::Renderer([&] {
     return ftxui::window(ftxui::text("Location"),
-      ftxui::text(currentPath) | ftxui::bold
+      ftxui::text(context.currentPath) | ftxui::bold
     );
   });
 
@@ -231,8 +240,8 @@ int main(){
         }
         if(event == ftxui::Event::Delete && selectedFinalChild == 0 && selectedLeftChild == 0){
             qNavPaths.erase(qNavPaths.begin() + qNavSelected);
-            data["qNavEntries"] = qNavPaths;
-            std::ofstream(std::string(homedir) + "/.bavel/data.json") << data;
+            context.data["qNavEntries"] = qNavPaths;
+            std::ofstream(std::string(context.homedir) + "/.bavel/data.json") << context.data;
             return true;
         }
         return false;

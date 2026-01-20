@@ -6,92 +6,82 @@
 namespace fs = std::filesystem;
 
 namespace ProcessingFuncs {
-    void StringifyContent(std::vector<ListItem*>& currentContent, std::vector<std::string>& currentStringified) {
-      currentStringified.clear();
-        for(int i = 0; i < currentContent.size(); i++){
-            currentStringified.push_back(currentContent[i]->ToString());
+    void StringifyContent(Context& context) {
+      context.currentStringified.clear();
+        for(int i = 0; i < context.currentContent.size(); i++){
+            context.currentStringified.push_back(context.currentContent[i]->ToString());
         }
     }
 
     void OnSelectedMenuOption(
-        std::vector<ListItem*>& currentContent, 
-        std::vector<std::string>& currentStringified,
-        std::string& currentPath,
-        int& selected,
-        std::string& exception,
-        SortTypes& sortType) {
+        Context& context,
+        int& selected) {
         try{
-            exception = "";
+            context.exception = "";
             std::string pathDestination;
-            if(currentContent[selected]->GetType() == ItemTypes::BACK){
-              pathDestination = currentPath.substr(0, currentPath.find_last_of("/"));
+            if(context.currentContent[selected]->GetType() == ItemTypes::BACK){
+              pathDestination = context.currentPath.substr(0, context.currentPath.find_last_of("/"));
               //clamps pathDestination to root
               if(pathDestination == ""){
                 pathDestination = "/";
               }
-              PathToItemList(pathDestination, currentContent);
-              SortItemList(currentContent, sortType);
-              currentPath = pathDestination;
-              StringifyContent(currentContent, currentStringified);
+              PathToItemList(pathDestination, context);
+              SortItemList(context);
+              context.currentPath = pathDestination;
+              StringifyContent(context);
             } 
-            else if(currentContent[selected]->GetType() == ItemTypes::DIR){
-              pathDestination = currentContent[selected]->GetName();
-              PathToItemList(pathDestination, currentContent);
-              SortItemList(currentContent, sortType);
-              currentPath = pathDestination;
-              StringifyContent(currentContent, currentStringified);
+            else if(context.currentContent[selected]->GetType() == ItemTypes::DIR){
+              pathDestination = context.currentContent[selected]->GetName();
+              PathToItemList(pathDestination, context);
+              SortItemList(context);
+              context.currentPath = pathDestination;
+              StringifyContent(context);
               selected = 0;
             } 
-            else if(currentContent[selected]->GetType() == ItemTypes::FIL){
-              std::system(("xdg-open '" + currentContent[selected]->GetName() + "'").c_str() );
+            else if(context.currentContent[selected]->GetType() == ItemTypes::FIL){
+              std::system(("xdg-open '" + context.currentContent[selected]->GetName() + "'").c_str() );
             }
           }
           catch(fs::filesystem_error &e){
-            exception = e.what();
+            context.exception = e.what();
           }
     }
 
-    void OnSelectedSortOption(std::vector<ListItem*>& currentContent, std::vector<std::string>& currentStringified, SortTypes& sortType){
-      SortItemList(currentContent, sortType);
-      StringifyContent(currentContent, currentStringified);
+    void OnSelectedSortOption(Context& context){
+      SortItemList(context);
+      StringifyContent(context);
     }
 
-    void OnSelectedQNavButton(
-        std::vector<ListItem*>& currentContent, 
-        std::vector<std::string>& currentStringified,
-        std::string pathDestination,
-        std::string& currentPath,
-        std::string& exception,
-        SortTypes& sortType){
+    void OnSelectedQNavButton(Context& context, std::string pathDestination){
       try{
-        exception = "";
-        PathToItemList(pathDestination, currentContent);
-        SortItemList(currentContent, sortType);
-        currentPath = pathDestination;
-        StringifyContent(currentContent, currentStringified);
+        context.exception = "";
+        PathToItemList(pathDestination, context);
+        SortItemList(context);
+        context.currentPath = pathDestination;
+        StringifyContent(context);
       }
       catch(fs::filesystem_error &e){
-        exception = e.what();
+        context.exception = e.what();
       }
     }
 
-    void OnSelectedQNavAddButton(std::string& currentPath, nlohmann::json& data, std::string& homedir, std::string& exception){
+    void OnSelectedQNavAddButton(Context& context){
       try{
-        exception = "";
-        if(!data["qNavEntries"].is_array()){
-           data["qNavEntries"] = nlohmann::json::array();
+        context.exception = "";
+        if(!context.data["qNavEntries"].is_array()){
+           context.data["qNavEntries"] = nlohmann::json::array();
         }
-        data["qNavEntries"].push_back(currentPath);
-        std::ofstream(std::string(homedir) + "/.bavel/data.json") << data;
+        context.data["qNavEntries"].push_back(context.currentPath);
+        std::ofstream(std::string(context.homedir) + "/.bavel/data.json") << context.data;
       }
       catch(const fs::filesystem_error &e){
-        exception = e.what();
+        context.exception = e.what();
       }
       catch(const std::exception &e){
-        exception = std::string("Error: ") + e.what();
+        context.exception = std::string("Error: ") + e.what();
       }
       catch(...){
-        exception = "Unknown error occurred";
+        context.exception = "Unknown error occurred";
       }
     }
 

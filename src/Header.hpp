@@ -41,34 +41,26 @@ class ListItem{
 
 };
 
-void PathToItemList(std::string path, std::vector<ListItem*>& currentContent);
-void SortItemList(std::vector<ListItem*>& currentContent, SortTypes sortType);
+struct Context{
+  std::string homedir;
+  nlohmann::json data; 
+  SortTypes sortType;
+  std::string currentPath;
+  std::vector<ListItem*> currentContent;
+  std::vector<std::string> currentStringified;
+  std::string exception;
+  std::vector<std::string> qNavPaths;
+} ;
+
+void PathToItemList(std::string path, Context& context);
+void SortItemList(Context& context);
 
 namespace ProcessingFuncs{
-    void StringifyContent(std::vector<ListItem*>& currentContent, 
-        std::vector<std::string>& currentStringified);
-    void OnSelectedMenuOption(
-        std::vector<ListItem*>& currentContent, 
-        std::vector<std::string>& currentStringified,
-        std::string& currentPath,
-        int& selected,
-        std::string& exception,
-        SortTypes& sortType);
-    void OnSelectedSortOption(
-        std::vector<ListItem*>& currentContent,
-        std::vector<std::string>& currentStringified,
-        SortTypes& sortType);
-    void OnSelectedQNavButton(
-        std::vector<ListItem*>& currentContent, 
-        std::vector<std::string>& currentStringified,
-        std::string pathDestination,
-        std::string& currentPath,
-        std::string& exception,
-        SortTypes& sortType);
-    void OnSelectedQNavAddButton(std::string& currentPath, 
-        nlohmann::json& data, 
-        std::string& homedir, 
-        std::string& exception);
+    void StringifyContent(Context& context);
+    void OnSelectedMenuOption(Context& context, int& selected);
+    void OnSelectedSortOption(Context& context);
+    void OnSelectedQNavButton(Context& context, std::string pathDestination);
+    void OnSelectedQNavAddButton(Context& context);
     std::string FsTimeToString(std::filesystem::file_time_type time);
     std::time_t FsTimeToTimeT(std::filesystem::file_time_type time);
 }

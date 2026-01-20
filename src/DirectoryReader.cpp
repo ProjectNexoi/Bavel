@@ -26,14 +26,14 @@ namespace fs = std::filesystem;
 #include "ftxui/util/ref.hpp"
 #include "ftxui/component/loop.hpp"
 
-void PathToItemList(std::string path, std::vector<ListItem*>& currentContent){
-  currentContent.clear();
+void PathToItemList(std::string path, Context& context){
+  context.currentContent.clear();
   ListItem* item = new ListItem(
       ItemTypes::BACK, 
       "..", 
       fs::file_time_type::min()
     );
-  currentContent.push_back(item);
+  context.currentContent.push_back(item);
   for (const auto & entry : fs::directory_iterator(path)){
     ItemTypes tempType = entry.is_directory() ? ItemTypes::DIR : ItemTypes::FIL;
     //try to find time of last write
@@ -47,17 +47,17 @@ void PathToItemList(std::string path, std::vector<ListItem*>& currentContent){
       std::string(entry.path()), 
       lwt
     );
-    currentContent.push_back(item);
+    context.currentContent.push_back(item);
   }
 }
 
-void SortItemList(std::vector<ListItem*>& currentContent, SortTypes sortType){
-    std::sort(currentContent.begin(), currentContent.end(), [sortType](ListItem* a, ListItem* b) {
+void SortItemList(Context& context){
+    std::sort(context.currentContent.begin(), context.currentContent.end(), [context](ListItem* a, ListItem* b) {
         if (a->GetType() == ItemTypes::BACK && b->GetType() != ItemTypes::BACK) return true;
         if (b->GetType() == ItemTypes::BACK && a->GetType() != ItemTypes::BACK) return false;
         if (a->GetType() == ItemTypes::BACK && b->GetType() == ItemTypes::BACK) return false;
 
-        switch(sortType) {
+        switch(context.sortType) {
             case SortTypes::NAME_ASC:
                 return a->GetName() < b->GetName();
             case SortTypes::NAME_DESC:
