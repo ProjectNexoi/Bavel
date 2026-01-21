@@ -29,6 +29,7 @@ add_executable(bavel
   src/ListItem.cpp
   src/DirectoryReader.cpp
   src/ProcessingFuncs.cpp
+  src/ElementLogic.cpp
 )
 
 target_link_libraries(bavel

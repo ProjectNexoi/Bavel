@@ -1,3 +1,4 @@
+#include <ftxui/dom/flexbox_config.hpp>
 #include <iostream>
 #include <fstream>
 #include <functional>
@@ -64,10 +65,7 @@ int main(){
 
   //QuickNav entries
   std::vector<std::string> qNavPaths = {};
-  try{
-    qNavPaths = context.data["qNavEntries"].get<std::vector<std::string>>();
-    
-  }
+  try{qNavPaths = context.data["qNavEntries"].get<std::vector<std::string>>();}
   catch(std::exception& e){
     exception = e.what();
   }
@@ -84,20 +82,21 @@ int main(){
     }
     return element | ftxui::flex;
   };
-  qNavMenuOption.on_enter = [&]{ProcessingFuncs::OnSelectedQNavButton(context, qNavPaths[qNavSelected]);};
+  qNavMenuOption.on_enter = [&]{ElementLogic::OnSelectedQNavButton(context, qNavPaths[qNavSelected]);};
   ftxui::Component qNavMenu = ftxui::Menu(&qNavPaths, &qNavSelected, qNavMenuOption);
 
 
   //QuickNav add new entry button
   ftxui::Component qNavAddButton = ftxui::Button("Add Current Path", [&]{
       qNavPaths.push_back(context.currentPath);
+      context.data["qNavEntries"] = qNavPaths;
       std::ofstream(std::string(context.homedir) + "/.bavel/data.json") << context.data;
     });
 
 
   int selected = context.currentContent.size() > 1 ? 1 : 0;
   auto menu_option = ftxui::MenuOption();
-  menu_option.on_enter = [&]{ProcessingFuncs::OnSelectedMenuOption(context, selected);};
+  menu_option.on_enter = [&]{ElementLogic::OnSelectedMenuOption(context, selected);};
   ftxui::Component menu = ftxui::Menu(&context.currentStringified, &selected, menu_option);
 
   int sortSelected = 0;
@@ -113,7 +112,7 @@ int main(){
     return element | ftxui::center | ftxui::flex;
   };
   std::vector<std::string> sortOptions = {"Name Ascending", "Name Descending", "Last Modified Ascending", "Last Modified Descending"};
-  sort_menu_option.on_change = [&]{context.sortType = SortTypes(sortSelected); ProcessingFuncs::OnSelectedSortOption(context);};
+  sort_menu_option.on_change = [&]{context.sortType = SortTypes(sortSelected); ElementLogic::OnSelectedSortOption(context);};
   ftxui::Component sort = ftxui::Menu(&sortOptions, &sortSelected, sort_menu_option);
 
 
@@ -129,10 +128,18 @@ int main(){
         ) | ftxui::flex;
   });
 
-  auto quickNavBox = ftxui::Renderer(qNavMenu, [&] {
+  auto quickNavContentBox = ftxui::Renderer(qNavMenu, [&] {
     return ftxui::vbox(
+      ftxui::vbox(
         qNavMenu->Render()
-      ) | ftxui::flex;
+      ) | ftxui::flex,
+      ftxui::separator(),
+      ftxui::text("Highlight an entry") | ftxui::center,
+      ftxui::text("and press [Enter]") | ftxui::center,
+      ftxui::text("to navigate to it") | ftxui::center,
+      ftxui::text("or press [Delete]") | ftxui::center,
+      ftxui::text("to remove it") | ftxui::center
+    ) | ftxui::flex;
     });
 
   auto quickNavSeparator = ftxui::Renderer([&] {
@@ -144,6 +151,7 @@ int main(){
         qNavAddButton->Render()
       );
     });
+    
 
   auto locationBox = ftxui::Renderer([&] {
     return ftxui::window(ftxui::text("Location"),
@@ -165,7 +173,7 @@ int main(){
 
   int selectedLeftChild = 0;
   auto leftPaneContainer = ftxui::Container::Vertical({
-    quickNavBox,
+    quickNavContentBox,
     quickNavSeparator,
     quickNavAddBox
   }, &selectedLeftChild);

@@ -57,11 +57,14 @@ void SortItemList(Context& context);
 
 namespace ProcessingFuncs{
     void StringifyContent(Context& context);
+    std::string FsTimeToString(std::filesystem::file_time_type time);
+    std::time_t FsTimeToTimeT(std::filesystem::file_time_type time);
+}
+
+namespace ElementLogic{
     void OnSelectedMenuOption(Context& context, int& selected);
     void OnSelectedSortOption(Context& context);
     void OnSelectedQNavButton(Context& context, std::string pathDestination);
     void OnSelectedQNavAddButton(Context& context);
-    std::string FsTimeToString(std::filesystem::file_time_type time);
-    std::time_t FsTimeToTimeT(std::filesystem::file_time_type time);
 }
 #endif 
