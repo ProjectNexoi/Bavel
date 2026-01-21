@@ -51,7 +51,8 @@ struct Context{
   std::string exception;
   std::vector<std::string> qNavPaths;
   std::vector<std::string> qNavEntries;
-} ;
+  bool newElementUIActive;
+};
 
 void PathToItemList(std::string path, Context& context);
 void SortItemList(Context& context);
@@ -61,6 +62,7 @@ namespace ProcessingFuncs{
     void ParseQNavPathsToEntries(Context& context);
     std::string FsTimeToString(std::filesystem::file_time_type time);
     std::time_t FsTimeToTimeT(std::filesystem::file_time_type time);
+    void ReloadItemList(Context& context);
 }
 
 namespace ElementLogic{
@@ -68,5 +70,7 @@ namespace ElementLogic{
     void OnSelectedSortOption(Context& context);
     void OnSelectedQNavButton(Context& context, int qNavSelected);
     void OnSelectedQNavAddButton(Context& context);
+    void OnSelectedNewFileButton(Context& context, std::string name);
+    void OnSelectedNewDirectoryButton(Context& context, std::string name);
 }
 #endif 

@@ -80,4 +80,33 @@ namespace ElementLogic {
         context.exception = "Unknown error occurred";
       }
     }
+
+    void OnSelectedNewDirectoryButton(Context& context, std::string name){
+      if(name == ""){
+        return;
+      }
+      try{
+        fs::create_directory(context.currentPath + "/" + name);
+        ProcessingFuncs::ReloadItemList(context);
+        context.newElementUIActive = false;
+      }
+      catch(fs::filesystem_error &e){
+        context.exception = e.what();
+      }
+    }
+
+    void OnSelectedNewFileButton(Context& context, std::string name){
+      if(name == ""){
+        return;
+      }
+      try{
+        std::ofstream ofs(context.currentPath + "/" + name);
+        ofs.close();
+        ProcessingFuncs::ReloadItemList(context);
+        context.newElementUIActive = false;
+      }
+      catch(fs::filesystem_error &e){
+        context.exception = e.what();
+      }
+    }
 }

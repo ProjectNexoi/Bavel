@@ -4,6 +4,7 @@ TODO:
 - Creating/Removing files/folders
 - Copy & Paste
 - Search Functionality
+- Renaming files/folders
 
 DONE:
 - Quick Navigation

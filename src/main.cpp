@@ -57,7 +57,7 @@ int main(){
 
   
   //Fetches the current directory's content
-  context.currentPath = "/";
+  context.currentPath = context.homedir;
   PathToItemList(context.currentPath, context);
   SortItemList(context);
 
@@ -70,7 +70,8 @@ int main(){
   ProcessingFuncs::ParseQNavPathsToEntries(context);
   int qNavSelected = 0;
   auto qNavMenuOption = ftxui::MenuOption(ftxui::MenuOption::Vertical());
-  qNavMenuOption.elements_prefix = []{ return ftxui::text("                                  "); }; // So that the leftpane doesn't change widths whenever a user adds/deletes a quicknav entry 
+  qNavMenuOption.elements_prefix = []{ 
+    return ftxui::text("                                  "); }; // So that the leftpane doesn't change widths whenever a user adds/deletes a quicknav entry 
   qNavMenuOption.entries_option.transform = [](const ftxui::EntryState& state) {
     auto element = ftxui::text(" " + state.label + " ");
     if (state.focused) {
@@ -116,6 +117,44 @@ int main(){
   sort_menu_option.on_change = [&]{context.sortType = SortTypes(sortSelected); ElementLogic::OnSelectedSortOption(context);};
   ftxui::Component sort = ftxui::Menu(&sortOptions, &sortSelected, sort_menu_option);
 
+  context.newElementUIActive = false;
+  std::string newElementName = "";
+  auto newElementNameInput = ftxui::Input(&newElementName) | ftxui::border;
+  
+  auto centered_button_option = ftxui::ButtonOption::Border();
+  centered_button_option.transform = [](const ftxui::EntryState& state) {
+    auto element = ftxui::text(state.label) | ftxui::center | ftxui::flex;
+    if (state.focused) {
+      element |= ftxui::inverted;
+    }
+    return element;
+  };
+  ftxui::Component newFileButton = ftxui::Button("File", [&]{ElementLogic::OnSelectedNewFileButton(context, newElementName); newElementName = "";}, centered_button_option) | ftxui::flex;
+  ftxui::Component newDirectoryButton = ftxui::Button("Directory", [&]{ElementLogic::OnSelectedNewDirectoryButton(context, newElementName); newElementName = "";}, centered_button_option) | ftxui::flex;
+  ftxui::Component newElementCancelButton = ftxui::Button("Cancel", [&]{context.newElementUIActive = false; newElementName = "";}, centered_button_option) | ftxui::flex;
+
+  int newElementSelected = 2;
+  auto newElementContent = ftxui::Container::Vertical({
+    ftxui::Renderer([] { return ftxui::text("Create New") | ftxui::center | ftxui::bold; }),
+    ftxui::Renderer([] {return ftxui::filler();}),
+    newElementNameInput,
+    ftxui::Renderer([] {return ftxui::filler();}),
+    ftxui::Container::Horizontal({
+      newFileButton,
+      newDirectoryButton,
+      newElementCancelButton}),
+    ftxui::Renderer([] {return ftxui::filler();})
+    }, &newElementSelected) | ftxui::flex;
+
+  auto newElementUI = ftxui::Renderer(newElementContent, [&] {
+    return ftxui::window(ftxui::text(""),
+      newElementContent->Render()
+    ) | ftxui::size(ftxui::WidthOrHeight::HEIGHT, ftxui::Constraint::EQUAL, 10)
+      | ftxui::size(ftxui::WidthOrHeight::WIDTH, ftxui::Constraint::EQUAL, 50)
+      | ftxui::center
+      | ftxui::clear_under;
+  });
+
 
   auto sortBox = ftxui::Renderer(sort , [&] {
     return ftxui::window(ftxui::text("Sort"),
@@ -127,6 +166,16 @@ int main(){
     return ftxui::window(ftxui::text("Content"),
           menu->Render() | ftxui::yframe
         ) | ftxui::flex;
+  });
+
+  auto menuLayout = ftxui::CatchEvent(menuBox, [&](ftxui::Event event) {
+    if(event == ftxui::Event::Character("e")){
+            screen.WithRestoredIO([&] {
+                std::system(("vim '" + context.currentContent[selected]->GetName() + "'").c_str() );
+            })();
+            return true;
+        }
+    return false;
   });
 
   auto quickNavContentBox = ftxui::Renderer(qNavMenu, [&] {
@@ -142,6 +191,17 @@ int main(){
       ftxui::text("to remove it") | ftxui::center
     ) | ftxui::flex;
     });
+
+  auto quickNavContentLayout = ftxui::CatchEvent(quickNavContentBox, [&](ftxui::Event event) {
+    if(event == ftxui::Event::Delete){
+            context.qNavPaths.erase(context.qNavPaths.begin() + qNavSelected);
+            context.data["qNavEntries"] = context.qNavPaths;
+            std::ofstream(std::string(context.homedir) + "/.bavel/data.json") << context.data;
+            ProcessingFuncs::ParseQNavPathsToEntries(context);
+            return true;
+        }
+    return false;
+  });
 
   auto quickNavSeparator = ftxui::Renderer([&] {
     return ftxui::separator();
@@ -174,7 +234,7 @@ int main(){
 
   int selectedLeftChild = 0;
   auto leftPaneContainer = ftxui::Container::Vertical({
-    quickNavContentBox,
+    quickNavContentLayout,
     quickNavSeparator,
     quickNavAddBox
   }, &selectedLeftChild);
@@ -189,7 +249,7 @@ int main(){
   auto middlePane = ftxui::Container::Vertical({
     locationBox,
     sortBox,
-    menuBox,
+    menuLayout,
     exceptionBox
   }, &selectedMiddleChild) | ftxui::flex;
 
@@ -198,13 +258,13 @@ int main(){
   }) | ftxui::flex;
 
   int selectedFinalChild = 1;
-  auto compositionFinal = ftxui::Container::Horizontal({
+  auto mainUI = ftxui::Container::Horizontal({
     leftPane, 
     middlePane, 
     rightPane}, 
     &selectedFinalChild);
 
-  auto layout = ftxui::CatchEvent(compositionFinal, [&](ftxui::Event event) {
+  auto mainLayout = ftxui::CatchEvent(mainUI, [&](ftxui::Event event) {
         if (event == ftxui::Event::Tab) {
             if(selectedFinalChild == 0){
                 selectedFinalChild = 1;
@@ -247,21 +307,28 @@ int main(){
                 return true;
             }
         }
-        if(event == ftxui::Event::Delete && selectedFinalChild == 0 && selectedLeftChild == 0){
-            context.qNavPaths.erase(context.qNavPaths.begin() + qNavSelected);
-            context.data["qNavEntries"] = context.qNavPaths;
-            std::ofstream(std::string(context.homedir) + "/.bavel/data.json") << context.data;
-            ProcessingFuncs::ParseQNavPathsToEntries(context);
-            return true;
-        }
-        if(event == ftxui::Event::Character("e") && selectedFinalChild == 1 && selectedMiddleChild == 2){
-            screen.WithRestoredIO([&] {
-                std::system(("vim '" + context.currentContent[selected]->GetName() + "'").c_str() );
-            })();
-            return true;
-        }
         return false;
-    });
+  });
 
-  screen.Loop(layout);
+
+  auto mainLayoutDimmable = ftxui::Renderer(mainLayout, [&] {
+    auto element = mainLayout->Render();
+    if (context.newElementUIActive) {
+      element |= ftxui::dim;
+    }
+    return element;
+  });
+
+  auto finalUI = ftxui::Modal(mainLayoutDimmable, newElementUI, &context.newElementUIActive);
+
+  auto finalUILayout = ftxui::CatchEvent(finalUI, [&](ftxui::Event event) {
+    if (event == ftxui::Event::Character("n")) {
+      context.newElementUIActive = true;
+      newElementUI->Focused();
+      return true;
+    }
+    return false;
+  });
+
+  screen.Loop(finalUILayout);
 }

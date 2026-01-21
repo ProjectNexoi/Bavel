@@ -57,4 +57,10 @@ namespace ProcessingFuncs {
 
       return cftime;
     }
+
+    void ReloadItemList(Context& context){
+      PathToItemList(context.currentPath, context);
+      SortItemList(context);
+      ProcessingFuncs::StringifyContent(context);
+    }
 }
