@@ -4,7 +4,8 @@
 #include "Header.hpp"
 #include <sys/stat.h>
 #include <pwd.h>
-
+#include <filesystem>
+namespace fs = std::filesystem;
 
 ListItem::ListItem(ItemTypes t, std::string p, std::filesystem::file_time_type l){
     this->type = t;
@@ -23,15 +24,22 @@ ListItem::ListItem(std::string path){
     this->path = path;
     this->fileName = path.substr(path.find_last_of("/")+1);
     this->type = std::filesystem::is_directory(path) ? ItemTypes::DIR : ItemTypes::FIL;
+    try{this->lastOpened = fs::last_write_time(path);} catch(fs::filesystem_error &e){}
     try{
-        this->lastOpened = std::filesystem::last_write_time(path);
-        this->size = std::filesystem::file_size(path);
-        struct stat info;
-        stat(path.c_str(), &info);
-        struct passwd *pw = getpwuid(info.st_uid);
-        this->owner = pw->pw_name;
-    }
-    catch(std::filesystem::filesystem_error error){}
+        if(this->type == ItemTypes::FIL){
+            this->size = fs::file_size(path);
+        }
+        else if (this->type == ItemTypes::DIR){
+            //TODO: Implement me!
+        }
+    } catch(fs::filesystem_error &e){}
+    try{
+        //struct stat info;
+        //stat(path.c_str(), &info);
+        //struct passwd *pw = getpwuid(info.st_uid);
+        //this->owner = pw->pw_name;
+    }catch(fs::filesystem_error &e){}
+
 }
 
 void ListItem::SetType(ItemTypes t){
