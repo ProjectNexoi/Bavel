@@ -2,6 +2,8 @@
 #include <string>
 #include <ctime>
 #include "Header.hpp"
+#include <sys/stat.h>
+#include <pwd.h>
 
 
 ListItem::ListItem(ItemTypes t, std::string p, std::filesystem::file_time_type l){
@@ -15,6 +17,21 @@ ListItem::ListItem(ItemTypes type, std::string path){
     this->type = type;
     this->path = path;
     this->fileName = path.substr(path.find_last_of("/")+1);
+}
+
+ListItem::ListItem(std::string path){
+    this->path = path;
+    this->fileName = path.substr(path.find_last_of("/")+1);
+    this->type = std::filesystem::is_directory(path) ? ItemTypes::DIR : ItemTypes::FIL;
+    try{
+        this->lastOpened = std::filesystem::last_write_time(path);
+        this->size = std::filesystem::file_size(path);
+        struct stat info;
+        stat(path.c_str(), &info);
+        struct passwd *pw = getpwuid(info.st_uid);
+        this->owner = pw->pw_name;
+    }
+    catch(std::filesystem::filesystem_error error){}
 }
 
 void ListItem::SetType(ItemTypes t){
@@ -48,6 +65,22 @@ void ListItem::SetLastOpened(std::filesystem::file_time_type l){
 
 std::filesystem::file_time_type ListItem::GetLastOpened(){
     return this->lastOpened;
+}
+
+void ListItem::SetSize(uintmax_t s){
+    this->size = s;
+}
+
+uintmax_t ListItem::GetSize(){
+    return this->size;
+}
+
+void ListItem::SetOwner(std::string o){
+    this->owner = o;
+}
+
+std::string ListItem::GetOwner(){
+    return this->owner;
 }
 
 std::string ListItem::ToString(){

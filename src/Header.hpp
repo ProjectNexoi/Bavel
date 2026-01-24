@@ -28,10 +28,13 @@ class ListItem{
         std::string path;
         std::string fileName;
         std::filesystem::file_time_type lastOpened;
+        uintmax_t size;
+        std::string owner;
     
     public:
         ListItem(ItemTypes t, std::string p, std::filesystem::file_time_type l);
         ListItem(ItemTypes type, std::string path);
+        ListItem(std::string path);
         void SetType(ItemTypes t);
         ItemTypes GetType();
         void SetPath(std::string p);
@@ -40,23 +43,37 @@ class ListItem{
         std::string GetFileName();
         void SetLastOpened(std::filesystem::file_time_type l);
         std::filesystem::file_time_type GetLastOpened();
+        void SetSize(uintmax_t s);
+        uintmax_t GetSize();
+        void SetOwner(std::string o);
+        std::string GetOwner();
         std::string ToString();
 
 };
 
+struct MetadataContext{
+  std::string itemName = "";
+  std::string itemType = "";
+  std::string itemLastWrite = "";
+  std::string itemSize = "";
+  std::string itemOwner = "";
+  std::string itemPath = "";
+};
+
 struct Context{
-  std::string homedir;
-  nlohmann::json data; 
-  SortTypes sortType;
-  std::string currentPath;
-  std::vector<ListItem*> currentContent;
-  std::vector<std::string> currentStringified;
-  std::string exception;
-  std::vector<std::string> qNavPaths;
-  std::vector<std::string> qNavEntries;
-  int activeModalIndex;
-  bool anyModalActive;
-  std::string locationBarText;
+  std::string homedir = "";
+  nlohmann::json data = {};
+  SortTypes sortType = SortTypes::NAME_ASC;
+  std::string currentPath = "";
+  std::vector<ListItem*> currentContent = {};
+  std::vector<std::string> currentStringified = {};
+  std::string exception = "";
+  std::vector<std::string> qNavPaths = {};
+  std::vector<std::string> qNavEntries = {};
+  int activeModalIndex = 0;
+  bool anyModalActive = false;
+  std::string locationBarText = "";
+  MetadataContext metadataContext;
 };
 
 void PathToItemList(std::string path, Context& context);
@@ -82,5 +99,6 @@ namespace ElementLogic{
     void OnSelectedDeleteElementButton(Context& context, int& selected);
     void OnSelectedRenameElementButton(Context& context, int& selected, std::string& newName);
     void OnLocationBarSubmit(Context& context);
+    void UpdateInformationBox(Context& context, int& selected);
 }
 #endif 

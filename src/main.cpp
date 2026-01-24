@@ -34,19 +34,6 @@ namespace fs = std::filesystem;
 int main(){
   // Initialize context
   Context context;
-  context.exception = "";
-  context.anyModalActive = false;
-  context.activeModalIndex = 0;
-  context.sortType = SortTypes::NAME_ASC;
-  context.qNavPaths = {};
-  context.qNavEntries = {};
-  context.currentStringified = {};
-  context.currentContent = {};
-  context.currentPath = "";
-  context.homedir = "";
-  context.data = {};
-  context.locationBarText = "";
-
 
   // Sets window to fill terminal
   /* 
@@ -77,6 +64,8 @@ int main(){
   // Fetches the current directory's content
   context.currentPath = context.homedir;
   NavigateToPath(context, context.currentPath);
+  int selected = context.currentContent.size() > 1 ? 1 : 0;
+  ElementLogic::UpdateInformationBox(context, selected);
 
   // QuickNav entries
   try{context.qNavPaths = context.data["qNavEntries"].get<std::vector<std::string>>();}
@@ -109,9 +98,9 @@ int main(){
   });
 
   // Initialize file menu
-  int selected = context.currentContent.size() > 1 ? 1 : 0;
   auto menu_option = ftxui::MenuOption();
   menu_option.on_enter = [&]{ElementLogic::OnSelectedMenuOption(context, selected);};
+  menu_option.on_change = [&]{ElementLogic::UpdateInformationBox(context, selected);};
   ftxui::Component menu = ftxui::Menu(&context.currentStringified, &selected, menu_option);
 
   // Initialize sort menu
@@ -125,7 +114,7 @@ int main(){
     if (state.active) {
       element |= ftxui::bold;
     }
-    return element | ftxui::flex | ftxui::center;
+    return element | ftxui::hcenter | ftxui::flex;
   };
   std::vector<std::string> sortOptions = {"Name Ascending", "Name Descending", "Last Modified Ascending", "Last Modified Descending"};
   sort_menu_option.on_change = [&]{context.sortType = SortTypes(sortSelected); ElementLogic::OnSelectedSortOption(context);};
@@ -240,12 +229,47 @@ int main(){
       | ftxui::clear_under;
   });
 
+  // Item Info Logic & GUI
 
+  auto ItemInfoContent = ftxui::Container::Vertical({
+    ftxui::Renderer([] {return ftxui::filler();}),
+    ftxui::Container::Horizontal({
+      ftxui::Renderer([] {return ftxui::text("Name: ");}),
+      ftxui::Renderer([&] {return ftxui::text(context.metadataContext.itemName);})
+    }) | ftxui::center | ftxui::bold,
+    ftxui::Renderer([] {return ftxui::filler();}),
+    ftxui::Container::Horizontal({
+      ftxui::Renderer([] {return ftxui::text("Type: ");}),
+      ftxui::Renderer([&] {return ftxui::text(context.metadataContext.itemType);})
+    }) | ftxui::center | ftxui::bold,
+    ftxui::Renderer([] {return ftxui::filler();}),
+    ftxui::Container::Horizontal({
+      ftxui::Renderer([] {return ftxui::text("Last Write: ");}),
+      ftxui::Renderer([&] {return ftxui::text(context.metadataContext.itemLastWrite);})
+    }) | ftxui::center | ftxui::bold,
+    ftxui::Renderer([] {return ftxui::filler();}),
+    ftxui::Container::Horizontal({
+      ftxui::Renderer([] {return ftxui::text("Size: ");}),
+      ftxui::Renderer([&] {return ftxui::text(context.metadataContext.itemSize);})
+    }) | ftxui::center | ftxui::bold,
+    ftxui::Renderer([] {return ftxui::filler();}),
+    ftxui::Container::Horizontal({
+      ftxui::Renderer([] {return ftxui::text("Owner: ");}),
+      ftxui::Renderer([&] {return ftxui::text(context.metadataContext.itemOwner);})
+    }) | ftxui::center | ftxui::bold,
+    ftxui::Renderer([] {return ftxui::filler();}),
+    ftxui::Container::Horizontal({
+      ftxui::Renderer([] {return ftxui::text("Path: ");}),
+      ftxui::Renderer([&] {return ftxui::text(context.metadataContext.itemPath);})
+    }) | ftxui::center | ftxui::bold,
+    ftxui::Renderer([] {return ftxui::filler();})
+  });
+    
 
   auto sortBox = ftxui::Renderer(sort , [&] {
     return ftxui::window(ftxui::text("Sort"),
-          sort->Render() | ftxui::xframe
-        );
+          sort->Render() | ftxui::xflex
+        ) | ftxui::xflex;
   });
 
   auto menuBox = ftxui::Renderer(menu , [&] {
@@ -339,10 +363,10 @@ int main(){
     return false;
   });
 
-  auto previewBox = ftxui::Renderer([&] {
-    return ftxui::window(ftxui::text("Item Preview"),
-      ftxui::text("item preview placeholder")
-    ) | ftxui::flex;
+  auto ItemInfoBox = ftxui::Renderer(ItemInfoContent, [&] {
+    return ftxui::window(ftxui::text("Item Information"),
+      ItemInfoContent->Render()
+    ) | ftxui::size(ftxui::WidthOrHeight::HEIGHT, ftxui::Constraint::EQUAL, 15);
   });
 
   auto exceptionBox = ftxui::Renderer([&] {
@@ -373,7 +397,7 @@ int main(){
   }, &selectedMiddleChild) | ftxui::flex;
 
   auto rightPane = ftxui::Container::Vertical({
-    previewBox
+    ItemInfoBox
   }) | ftxui::flex;
 
   int selectedFinalChild = 1;

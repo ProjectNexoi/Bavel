@@ -149,4 +149,17 @@ namespace ElementLogic {
         context.exception = e.what();
       }
     }
+
+    void UpdateInformationBox(Context& context, int& selected){
+      ListItem* item = context.currentContent[selected];
+      if(item->GetType() == ItemTypes::BACK){
+        item = new ListItem(context.currentPath);
+      }
+      context.metadataContext.itemName = item->GetFileName();
+      context.metadataContext.itemType = item->GetType() == ItemTypes::DIR ? "Directory" : "File";
+      context.metadataContext.itemLastWrite = ProcessingFuncs::FsTimeToString(item->GetLastOpened());
+      context.metadataContext.itemSize = std::to_string(item->GetSize());
+      context.metadataContext.itemOwner = item->GetOwner();
+      context.metadataContext.itemPath = item->GetPath();
+    }
 }

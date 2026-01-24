@@ -4,6 +4,7 @@ TODO:
 - Search Functionality
 - Fixing the Sort Function
 - Add Sorting By Size
+- Implement adding qNav entries via typing
 
 DONE:
 - Quick Navigation

@@ -28,25 +28,10 @@ namespace fs = std::filesystem;
 
 void PathToItemList(std::string path, Context& context){
   context.currentContent.clear();
-  ListItem* item = new ListItem(
-      ItemTypes::BACK, 
-      "..", 
-      fs::file_time_type::min()
-    );
+  ListItem* item = new ListItem(ItemTypes::BACK, "..", fs::file_time_type::min());
   context.currentContent.push_back(item);
   for (const auto & entry : fs::directory_iterator(path)){
-    ItemTypes tempType = entry.is_directory() ? ItemTypes::DIR : ItemTypes::FIL;
-    //try to find time of last write
-    fs::file_time_type lwt = fs::file_time_type::min();
-    try{
-      lwt = entry.last_write_time();
-    }
-    catch(fs::filesystem_error error){ lwt = fs::file_time_type::min(); }
-    ListItem* item = new ListItem(
-      tempType, 
-      std::string(entry.path()), 
-      lwt
-    );
+    ListItem* item = new ListItem(std::string(entry.path()));
     context.currentContent.push_back(item);
   }
 }
