@@ -1,10 +1,8 @@
 TODO:
-- File/Folder Previewing/Information
 - Copy & Paste
 - Search Functionality
 - Fixing the Sort Function
 - Add Sorting By Size
-- Implement adding qNav entries via typing
 
 DONE:
 - Quick Navigation
@@ -12,3 +10,5 @@ DONE:
 - Creating/Removing files/folders
 - Renaming files/folders
 - Navigation using Location Bar
+- Implement adding qNav entries via typing
+- File/Folder Previewing/Information
