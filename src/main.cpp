@@ -67,12 +67,14 @@ int main(){
   ElementLogic::UpdateInformationBox(context, selected);
 
   // QuickNav entries
-  try{context.qNavPaths = context.data["qNavEntries"].get<std::vector<std::string>>();}
+  try{context.qNavPaths = context.data["qNavPaths"].get<std::vector<std::string>>();}
   catch(std::exception& e){context.exception = e.what();}
   ProcessingFuncs::ParseQNavPathsToEntries(context);
   int qNavSelected = 0;
   auto qNavMenuOption = ftxui::MenuOption(ftxui::MenuOption::Vertical());
   qNavMenuOption.elements_prefix = []{ 
+    return ftxui::text(""); };
+  qNavMenuOption.elements_postfix = []{ 
     return ftxui::text(""); };
   qNavMenuOption.entries_option.transform = [](const ftxui::EntryState& state) {
     auto element = ftxui::text(" " + state.label + " ");
@@ -87,11 +89,29 @@ int main(){
   qNavMenuOption.on_enter = [&]{ElementLogic::OnSelectedQNavButton(context, qNavSelected); ProcessingFuncs::ParseQNavPathsToEntries(context);};
   ftxui::Component qNavMenu = ftxui::Menu(&context.qNavEntries, &qNavSelected, qNavMenuOption);
 
+  // QuickNav add user input as entry
+  std::string qNavInputText = "";
+  ftxui::InputOption qNavInputOption;
+  qNavInputOption.on_enter = [&]{
+    qNavInputText = qNavInputText.substr(0, qNavInputText.length() - 1);
+    if(fs::exists(qNavInputText)){
+      context.qNavPaths.push_back(qNavInputText);
+      context.data["qNavPaths"] = context.qNavPaths;
+      DataLoader::SaveDataToFile(context);
+      ProcessingFuncs::ParseQNavPathsToEntries(context);
+      qNavInputText = "";
+    }
+    else{
+      context.exception = "Path does not exist";
+    }
+  };
+  ftxui::Component qNavInput = ftxui::Input(&qNavInputText, " Input path", qNavInputOption);
 
-  // QuickNav add new entry button
+
+  // QuickNav add current path as entry
   ftxui::Component qNavAddButton = ftxui::Button("Add Current Path", [&]{
       context.qNavPaths.push_back(context.currentPath);
-      context.data["qNavEntries"] = context.qNavPaths;
+      context.data["qNavPaths"] = context.qNavPaths;
       DataLoader::SaveDataToFile(context);
       ProcessingFuncs::ParseQNavPathsToEntries(context);
   });
@@ -319,10 +339,11 @@ int main(){
     return false;
   });
 
-  auto quickNavContentBox = ftxui::Renderer(qNavMenu, [&] {
+  auto quickNavContentBox = ftxui::Renderer(ftxui::Container::Vertical({qNavMenu, qNavInput}), [&] {
     return ftxui::vbox(
       ftxui::vbox(
-        qNavMenu->Render()
+        qNavMenu->Render(),
+        qNavInput->Render()
       ) | ftxui::flex,
       ftxui::separator(),
       ftxui::paragraph("Highlight an entry and press [Enter] to navigate to it or press [Delete] to remove it. Reorder with [Ctrl+Up] and [Ctrl+Down].") 
@@ -332,7 +353,7 @@ int main(){
   auto quickNavContentLayout = ftxui::CatchEvent(quickNavContentBox, [&](ftxui::Event event) {
     if(event == ftxui::Event::Delete){
             context.qNavPaths.erase(context.qNavPaths.begin() + qNavSelected);
-            context.data["qNavEntries"] = context.qNavPaths;
+            context.data["qNavPaths"] = context.qNavPaths;
             DataLoader::SaveDataToFile(context);
             ProcessingFuncs::ParseQNavPathsToEntries(context);
             return true;

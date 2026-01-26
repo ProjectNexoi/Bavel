@@ -59,26 +59,6 @@ namespace ElementLogic {
       }
     }
 
-    void OnSelectedQNavAddButton(Context& context){
-      try{
-        context.exception = "";
-        if(!context.data["qNavEntries"].is_array()){
-           context.data["qNavEntries"] = nlohmann::json::array();
-        }
-        context.data["qNavEntries"].push_back(context.currentPath);
-        DataLoader::SaveDataToFile(context);
-      }
-      catch(const fs::filesystem_error &e){
-        context.exception = e.what();
-      }
-      catch(const std::exception &e){
-        context.exception = std::string("Error: ") + e.what();
-      }
-      catch(...){
-        context.exception = "Unknown error occurred";
-      }
-    }
-
     void OnSelectedNewDirectoryButton(Context& context, std::string name){
       if(name == ""){
         return;
@@ -199,7 +179,7 @@ namespace ElementLogic {
         std::swap(context.qNavEntries[selected], context.qNavEntries[selected + 1]);
         selected++;
       }
-      context.data["qNavEntries"] = context.qNavPaths;
+      context.data["qNavPaths"] = context.qNavPaths;
       DataLoader::SaveDataToFile(context);
     }
 }
