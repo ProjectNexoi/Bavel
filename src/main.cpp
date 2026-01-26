@@ -256,7 +256,7 @@ int main(){
         }
         // Non-blocking check for availability
         if (context.metadataContext.itemSize.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
-           return ftxui::text(context.metadataContext.itemSize.get());
+           return ftxui::text(ProcessingFuncs::RawByteAmountToString(context.metadataContext.itemSize.get()));
         } else {
            return ftxui::text("Calculating...");
         }

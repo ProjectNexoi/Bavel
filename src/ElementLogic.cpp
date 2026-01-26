@@ -167,16 +167,15 @@ namespace ElementLogic {
       context.metadataContext.itemName = item->GetFileName();
       context.metadataContext.itemType = item->GetType() == ItemTypes::DIR ? "Directory" : "File";
       context.metadataContext.itemLastWrite = ProcessingFuncs::FsTimeToString(item->GetLastOpened());
-      auto promise = std::make_shared<std::promise<std::string>>();
+      auto promise = std::make_shared<std::promise<std::uintmax_t>>();
       context.metadataContext.itemSize = promise->get_future().share();
 
       std::thread([promise, item, isBack]() {
           uintmax_t size = item->GetSize();
-          std::string sizeStr = std::to_string(size);
           if (isBack) {
               delete item;
           }
-          promise->set_value(sizeStr);
+          promise->set_value(size);
       }).detach();
 
       context.metadataContext.itemOwner = item->GetOwner();

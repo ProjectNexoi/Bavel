@@ -59,7 +59,7 @@ struct MetadataContext{
   std::string itemName = "";
   std::string itemType = "";
   std::string itemLastWrite = "";
-  std::shared_future<std::string> itemSize;
+  std::shared_future<uintmax_t> itemSize;
   std::string itemOwner = "";
   std::string itemPath = "";
 };
@@ -92,6 +92,7 @@ namespace ProcessingFuncs{
     std::time_t FsTimeToTimeT(std::filesystem::file_time_type time);
     void ReloadItemList(Context& context);
     void ParseCurrentPathToNavText(Context& context);
+    std::string RawByteAmountToString(uintmax_t bytes);
 }
 
 namespace ElementLogic{

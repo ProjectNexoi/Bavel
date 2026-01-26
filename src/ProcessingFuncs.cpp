@@ -71,4 +71,16 @@ namespace ProcessingFuncs {
       SortItemList(context);
       ProcessingFuncs::StringifyContent(context);
     }
+
+    std::string RawByteAmountToString(uintmax_t bytes){
+      std::string str;
+      std::vector<std::string> units = {"B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
+      int unitIndex = 0;
+      while (bytes >= 1024 && unitIndex < units.size() - 1) {
+          bytes /= 1024;
+          unitIndex++;
+      }
+      str = std::to_string(bytes) + " " + units[unitIndex];
+      return str;
+    }
 }
